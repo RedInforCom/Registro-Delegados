@@ -1,2 +1,0 @@
-[15-Jan-2026 04:06:33 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/zqgikadc/psicologiaenvivo.com/delegados/actions/editar_perfil.php on line 144
-[15-Jan-2026 04:06:46 UTC] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/zqgikadc/psicologiaenvivo.com/delegados/actions/editar_perfil.php on line 144
