@@ -71,7 +71,7 @@ if (isset($_SESSION['usuario_id'])) {
 
         <div class="mt-6 text-center">
             <button onclick="openRegistroModal()" 
-                class="text-white hover:text-lightblue font-semibold">
+                class="inline-block bg-navy text-white px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition duration-300">
                 <i class="fas fa-user-plus mr-2"></i>Registro de Delegados
             </button>
         </div>
@@ -166,6 +166,21 @@ if (isset($_SESSION['usuario_id'])) {
                         <input type="password" name="contrasena" id="contrasenaReg" required 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
                     </div>
+
+                    <!-- Campo para la clave de registro (controlado) -->
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">Clave de registro *</label>
+                        <input type="password" name="clave" id="claveReg" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy" 
+                            placeholder="Introduce la clave que te proporcionaron">
+                    </div>
+
+                    <!-- Honeypot: campo oculto para atrapar bots -->
+                    <div style="display:none;">
+                        <label>Website</label>
+                        <input type="text" name="website" id="website" autocomplete="off" value="">
+                    </div>
+
                 </div>
 
                 <div class="flex gap-4 pt-4">
@@ -195,14 +210,14 @@ if (isset($_SESSION['usuario_id'])) {
             document.getElementById('registroForm').reset();
         }
 
-        // Envío AJAX del formulario de registro
+        // Envío AJAX del formulario de registro (ahora apunta a register_public.php)
         document.getElementById('registroForm').addEventListener('submit', function(e) {
             e.preventDefault();
             document.getElementById('errorRegistro').classList.add('hidden');
             
             const formData = new FormData(this);
             
-            fetch('auth/register.php', {
+            fetch('auth/register_public.php', {
                 method: 'POST',
                 body: formData
             })

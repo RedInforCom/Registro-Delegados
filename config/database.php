@@ -5,6 +5,9 @@ define('DB_USER', 'zqgikadc_admin');
 define('DB_PASS', 'aBjar1BKI4sW');
 define('DB_NAME', 'zqgikadc_delegados');
 
+// Clave de registro (fácil de configurar tal como pediste)
+define('REGISTRATION_KEY', '#Psico.#Peru26');
+
 // Crear conexión
 function getConnection() {
     try {
