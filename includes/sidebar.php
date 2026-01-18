@@ -674,7 +674,7 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
     }
 
     if (valida && !valida.error && valida.exists) {
-      return showError(valida.message || 'El teléfono ya está registrado.');
+      return showError('El teléfono ' + telefonoParaCheck + ' ya está registrado');
     }
 
     const submitBtn = this.querySelector('button[type="submit"]');
@@ -1008,58 +1008,46 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
 
 <!-- MODAL Logs de actividad (admin) -->
 <?php if (isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'administrador'): ?>
-<div id="modalLogs" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl" style="max-width:80rem; outline: none;">
-    <!-- Caja que ocupa 60% de la pantalla -->
-    <div style="display:flex; flex-direction:column; height:60vh; max-height:60vh;">
-      <!-- Header -->
-      <div class="p-4 border-b flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-bold"><i class="fas fa-list-alt mr-2"></i>Logs de actividad</h3>
-          <p class="text-sm text-gray-600 mt-1">Últimos movimientos del sistema (delegados, asesores, usuarios).</p>
+<!-- Modal Logs (alto fijo: 75vh, ancho max 75rem) -->
+<div id="modalLogs" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-2xl w-full" 
+       style="max-width:75rem; width:100%; height:75vh; display:flex; flex-direction:column; overflow:hidden;">
+    <!-- Header (fijo) -->
+    <div style="background:#1e293b; color:#fff; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between;">
+      <h2 style="font-size:1.125rem; font-weight:700; display:flex; align-items:center; gap:0.5rem;">
+        <i class="fas fa-list" aria-hidden="true"></i>
+        Registro de Actividad
+      </h2>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <button id="btnExportCSVHeader" style="background:#374151;color:#fff;padding:0.35rem 0.6rem;border-radius:0.25rem;font-size:0.875rem;">Exportar CSV</button>
+        <button onclick="closeLogsModal()" aria-label="Cerrar" style="color:#fff;font-size:1.25rem;font-weight:700;background:transparent;border:0;padding:0 0.5rem;line-height:1;">×</button>
+      </div>
+    </div>
+
+    <!-- Body (flex) -->
+    <div style="padding:1rem; display:flex; flex-direction:column; gap:0.75rem; flex:1; min-height:0;">
+      <!-- filtros en una sola fila (responsive) -->
+      <form id="formLogsFilter" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <input type="text" name="q" placeholder="Buscar (acción, ruta, detalle)" style="flex:1; min-width:180px; padding:0.5rem; border:1px solid #ddd; border-radius:6px;" />
+        <select name="tipo" style="width:12.5rem; padding:0.5rem; border:1px solid #ddd; border-radius:6px;">
+          <option value="">Todos los tipos</option>
+          <option value="administrador">Administrador</option>
+          <option value="asesor">Asesor</option>
+          <option value="delegado">Delegado</option>
+        </select>
+        <input type="text" name="usuario" placeholder="Usuario (nombre o id)" style="width:14rem; padding:0.5rem; border:1px solid #ddd; border-radius:6px;" />
+        <input type="date" name="desde" style="padding:0.5rem; border:1px solid #ddd; border-radius:6px;" />
+        <input type="date" name="hasta" style="padding:0.5rem; border:1px solid #ddd; border-radius:6px;" />
+        <!-- Espacio final para botones opcionales -->
+        <div style="margin-left:auto; display:flex; gap:0.5rem; align-items:center;">
+          <button type="button" id="btnVaciarLogsSmall" style="background:#dc2626;color:#fff;padding:0.45rem 0.65rem;border-radius:6px;border:0;display:none;">Vaciar</button>
         </div>
-        <div><button onclick="closeLogsModal()" class="px-3 py-1 rounded bg-gray-200">Cerrar</button></div>
-      </div>
+      </form>
 
-      <!-- Filtros: BUSCAR ocupa todo el espacio sobrante (flex-1) -->
-      <div class="p-3 border-b">
-        <form id="formLogsFilter" class="flex items-end gap-2">
-          <div class="flex-1">
-            <label class="text-sm">Buscar</label><br>
-            <input type="text" name="q" class="w-full px-2 py-1 border rounded" placeholder="texto, usuario, acción">
-          </div>
-
-          <div>
-            <label class="text-sm">Tipo</label><br>
-            <select name="tipo" class="px-2 py-1 border rounded">
-              <option value="">Todos</option>
-              <option value="asesor">Asesores</option>
-              <option value="delegado">Delegados</option>
-              <option value="usuario">Usuarios</option>
-              <option value="anonimo">Anónimo</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="text-sm">Usuario</label><br>
-            <input type="text" name="usuario" class="px-2 py-1 border rounded" placeholder="Nombre de usuario">
-          </div>
-
-          <div>
-            <label class="text-sm">Desde</label><br>
-            <input type="date" name="desde" class="px-2 py-1 border rounded">
-          </div>
-
-          <div>
-            <label class="text-sm">Hasta</label><br>
-            <input type="date" name="hasta" class="px-2 py-1 border rounded">
-          </div>
-        </form>
-      </div>
-
-      <!-- Contenedor scrollable para la tabla; ocupa el resto del modal (por eso no salta) -->
-      <div id="logsContainer" style="overflow-y:auto; -webkit-overflow-scrolling: touch; flex:1; min-height:50px;">
-        <div class="p-4 text-sm text-gray-600">Cargando...</div>
+      <!-- contenedor de logs: ocupa el espacio restante y es scrollable -->
+      <div id="logsContainer" style="flex:1; min-height:0; overflow:auto; border:1px solid #e6e6e6; border-radius:6px; background:#fff; padding:0.25rem;">
+        <!-- loader o tabla vendrán aquí; altura fija evita saltos -->
+        <div style="padding:1rem; color:#4b5563; font-size:0.9rem;">Cargando...</div>
       </div>
     </div>
   </div>
@@ -1069,12 +1057,17 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
 (function(){
   const modalId = 'modalLogs';
   const containerId = 'logsContainer';
-  const formId = 'formLogsFilter';
-  const batchLimit = 50;          // tamaño del lote (ajusta si quieres más/menos)
+  const formId = 'formLogsFilter'; // debe coincidir con el HTML del modal
+  const batchLimit = 50;          // tamaño del lote
+  const POLL_MS = 5000;           // intervalo polling 5s (ajustable)
+  const loaderId = 'logsLoaderOverlay';
+
   let offset = 0;
   let loading = false;
-  let more = true;               // si hay más por cargar
+  let more = true;
   let currentController = null;
+  let pollInterval = null;
+  let lastTimestamp = null;
 
   function getEl(id){ return document.getElementById(id); }
 
@@ -1086,6 +1079,49 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
     };
   }
 
+  // ---------- Helpers para manejar filas y tbody sin reemplazar todo ----------
+  function parseRowsFromHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const trs = tmp.querySelectorAll('table tbody tr');
+    // Return clones so they can be inserted into the real DOM
+    return Array.from(trs).map(tr => tr.cloneNode(true));
+  }
+
+  function replaceTbodyRows(container, newRows) {
+    let table = container.querySelector('table');
+    if (!table) {
+      // If server returned a table with thead, it would have been in html; fallback create table skeleton
+      container.innerHTML = '<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="px-3 py-2">Fecha</th><th class="px-3 py-2">Usuario</th><th class="px-3 py-2">Tipo</th><th class="px-3 py-2">Acción</th><th class="px-3 py-2">IP</th><th class="px-3 py-2">Detalle</th></tr></thead><tbody></tbody></table>';
+      table = container.querySelector('table');
+    }
+    let tbody = table.querySelector('tbody');
+    if (!tbody) {
+      tbody = document.createElement('tbody');
+      table.appendChild(tbody);
+    }
+    // Replace content preserving tbody element reference
+    tbody.innerHTML = '';
+    newRows.forEach(tr => tbody.appendChild(tr));
+  }
+
+  function appendRowsToTbody(container, newRows) {
+    let table = container.querySelector('table');
+    if (!table) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = '<table class="w-full text-sm"><thead class="bg-gray-100"><tr><th class="px-3 py-2">Fecha</th><th class="px-3 py-2">Usuario</th><th class="px-3 py-2">Tipo</th><th class="px-3 py-2">Acción</th><th class="px-3 py-2">IP</th><th class="px-3 py-2">Detalle</th></tr></thead><tbody></tbody></table>';
+      container.appendChild(wrapper);
+      table = container.querySelector('table');
+    }
+    let tbody = table.querySelector('tbody');
+    if (!tbody) {
+      tbody = document.createElement('tbody');
+      table.appendChild(tbody);
+    }
+    newRows.forEach(tr => tbody.appendChild(tr));
+  }
+
+  // ---------- Carga por lotes (inteligente: reemplaza sólo tbody o añade filas) ----------
   async function loadBatch(reset = false) {
     if (loading) return;
     if (reset) {
@@ -1097,18 +1133,31 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
     const container = getEl(containerId);
     if (!container) return;
 
-    // mostrar loader
-    const loaderId = 'logsLoader';
-    if (reset) container.innerHTML = '<div class="p-4 text-sm text-gray-600">Cargando...</div>';
-    else {
-      const l = document.createElement('div');
-      l.id = loaderId;
-      l.className = 'p-4 text-sm text-gray-600';
-      l.textContent = 'Cargando más registros...';
-      container.appendChild(l);
+    // loader overlay (non-destructive)
+    if (reset) {
+      // reduce opacity of current content
+      container.querySelectorAll('*').forEach(n => { if (n.id !== loaderId) n.style.opacity = '0.35'; });
+      // create overlay loader
+      const loaderEl = document.createElement('div');
+      loaderEl.id = loaderId;
+      loaderEl.style.cssText = 'position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.6); z-index:5;';
+      loaderEl.innerHTML = '<div style="padding:1rem; background:#fff; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.08); color:#374151;">Cargando...</div>';
+      // ensure container is positioned
+      if (!container.style.position) container.style.position = 'relative';
+      container.appendChild(loaderEl);
+    } else {
+      // small inline loader at the end when loading more
+      if (!document.getElementById(loaderId + '_mini')) {
+        const mini = document.createElement('div');
+        mini.id = loaderId + '_mini';
+        mini.className = 'logs-mini-loader';
+        mini.style.cssText = 'padding:0.5rem; text-align:center; color:#374151;';
+        mini.textContent = 'Cargando más registros...';
+        container.appendChild(mini);
+      }
     }
 
-    // Construir params desde el formulario de filtros
+    // build params from form
     const params = new URLSearchParams();
     const form = getEl(formId);
     if (form) {
@@ -1136,9 +1185,9 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
 
       if (!resp.ok) {
         if (resp.status === 403) {
-          container.innerHTML = '<div class="p-4 text-sm text-red-600">No autorizado.</div>';
+          container.innerHTML = '<div style="padding:1rem;color:#b91c1c;">No autorizado.</div>';
         } else {
-          container.innerHTML = '<div class="p-4 text-sm text-red-600">Error al cargar logs.</div>';
+          container.innerHTML = '<div style="padding:1rem;color:#b91c1c;">Error al cargar logs.</div>';
         }
         loading = false;
         return;
@@ -1146,43 +1195,156 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
 
       const data = await resp.json();
       if (!data || !data.success) {
-        container.innerHTML = '<div class="p-4 text-sm text-red-600">' + (data && data.message ? data.message : 'Error al cargar logs.') + '</div>';
+        container.innerHTML = '<div style="padding:1rem;color:#b91c1c;">' + (data && data.message ? data.message : 'Error al cargar logs.') + '</div>';
         loading = false;
         return;
       }
 
+      const html = data.html || '';
+      const newRows = parseRowsFromHtml(html);
+
       if (reset) {
-        container.innerHTML = data.html || '<div class="p-4 text-sm text-gray-600">No hay registros recientes</div>';
+        // Replace only tbody (avoid reflow of entire modal)
+        replaceTbodyRows(container, newRows);
+        // reset scroll to top of the scrollable area
+        container.scrollTop = 0;
+
+        // update lastTimestamp from html if possible
+        const match = html.match(/<td[^>]*>(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})<\/td>/);
+        if (match) lastTimestamp = match[1];
+        else {
+          const now = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          lastTimestamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        }
       } else {
-        const loader = document.getElementById('logsLoader');
-        if (loader) loader.remove();
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = data.html || '';
-        container.appendChild(wrapper);
+        // append incremental
+        const prevScrollHeight = container.scrollHeight;
+        if (newRows.length > 0) appendRowsToTbody(container, newRows);
+        const isAtBottom = (container.scrollTop + container.clientHeight + 10) >= prevScrollHeight;
+        if (isAtBottom) container.scrollTop = container.scrollHeight;
       }
 
       more = !!data.more;
       offset += (data.count || 0);
 
-      // mostrar mensaje si no hay nada en el primer lote
-      if (offset === 0 && !more && (!data.html || data.html.trim() === '')) {
-        container.innerHTML = '<div class="p-4 text-sm text-gray-600">No hay registros recientes</div>';
+      if (offset === 0 && !more && newRows.length === 0) {
+        container.innerHTML = '<div style="padding:1rem;color:#374151;">No hay registros recientes</div>';
       }
     } catch (err) {
       if (err && err.name === 'AbortError') {
-        // petición abortada: silenciar
+        // aborted - ignore
       } else {
         console.error('fetchLogs error:', err);
-        const container = getEl(containerId);
-        if (container) container.innerHTML = '<div class="p-4 text-sm text-red-600">Error de red al cargar logs.</div>';
+        if (container) container.innerHTML = '<div style="padding:1rem;color:#b91c1c;">Error de red al cargar logs.</div>';
       }
     } finally {
+      // remove loaders
+      try {
+        const loader = document.getElementById(loaderId);
+        if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+        const mini = document.getElementById(loaderId + '_mini');
+        if (mini && mini.parentNode) mini.parentNode.removeChild(mini);
+        // restore opacity
+        if (container) container.querySelectorAll('*').forEach(n => { if (n.id !== loaderId) n.style.opacity = ''; });
+      } catch (e) { /* ignore cleanup errors */ }
+
       loading = false;
       currentController = null;
     }
   }
 
-  // Abrir modal: resetear estado y cargar primer lote
+  // ---------- Polling: insertar nuevas filas al inicio del tbody y resaltarlas ----------
+  async function pollNew() {
+    if (!lastTimestamp) return;
+    try {
+      const resp = await fetch('actions/get_new_logs.php?since=' + encodeURIComponent(lastTimestamp), {
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data || !data.success || !data.rows || data.rows.length === 0) return;
+
+      const rows = data.rows; // ASC: oldest -> newest
+      const container = getEl(containerId);
+      if (!container) return;
+
+      const tbody = container.querySelector && container.querySelector('table tbody');
+
+      if (tbody) {
+        // create tr elements and prepend (so newest appears first)
+        const created = [];
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
+          const tr = document.createElement('tr');
+          tr.className = 'border-b hover:bg-gray-50';
+
+          const tdFecha = document.createElement('td');
+          tdFecha.className = 'px-3 py-2 align-top';
+          tdFecha.textContent = r.fecha || '';
+
+          const tdUsuario = document.createElement('td');
+          tdUsuario.className = 'px-3 py-2 align-top';
+          tdUsuario.textContent = r.usuario_nombre ? r.usuario_nombre : (r.usuario_id ? 'ID:' + r.usuario_id : 'Anónimo');
+
+          const tdTipo = document.createElement('td');
+          tdTipo.className = 'px-3 py-2 align-top';
+          tdTipo.textContent = r.tipo_usuario || '';
+
+          const tdAccion = document.createElement('td');
+          tdAccion.className = 'px-3 py-2 align-top';
+          tdAccion.textContent = r.accion || '';
+
+          const tdIp = document.createElement('td');
+          tdIp.className = 'px-3 py-2 align-top';
+          tdIp.textContent = r.ip || '';
+
+          const tdDetalle = document.createElement('td');
+          tdDetalle.className = 'px-3 py-2 align-top';
+          const pre = document.createElement('pre');
+          pre.style.whiteSpace = 'pre-wrap';
+          pre.style.wordBreak = 'break-word';
+          pre.style.maxWidth = '36rem';
+          let detalleText = '';
+          if (r.detalle) {
+            try { const det = JSON.parse(r.detalle); detalleText = JSON.stringify(det); } catch(e) { detalleText = r.detalle; }
+          }
+          pre.textContent = detalleText;
+          tdDetalle.appendChild(pre);
+
+          tr.appendChild(tdFecha);
+          tr.appendChild(tdUsuario);
+          tr.appendChild(tdTipo);
+          tr.appendChild(tdAccion);
+          tr.appendChild(tdIp);
+          tr.appendChild(tdDetalle);
+
+          created.push(tr);
+        }
+
+        // prepend in reverse order so newest is at top
+        for (let i = created.length - 1; i >= 0; i--) {
+          const tr = created[i];
+          tbody.insertBefore(tr, tbody.firstChild);
+          // highlight temporarily
+          tr.style.backgroundColor = '#fffbeb'; // light yellow
+          (function(el){ setTimeout(()=>{ el.style.backgroundColor = ''; }, 3000); })(tr);
+        }
+
+        // update lastTimestamp
+        const newest = rows[rows.length - 1];
+        if (newest && newest.fecha) lastTimestamp = newest.fecha;
+      } else {
+        // fallback reload
+        await loadBatch(true);
+      }
+    } catch (e) {
+      console.error('Error polling logs:', e);
+    }
+  }
+
+  // ---------- Abrir / Cerrar modal ----------
   window.openLogsModal = function() {
     const form = getEl(formId); if (form) form.reset();
     if (typeof abrirModal === 'function') abrirModal(modalId);
@@ -1190,42 +1352,43 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
       const el = getEl(modalId); if (!el) return; el.classList.remove('hidden'); el.classList.add('flex');
     }
     offset = 0; more = true;
-    loadBatch(true);
+    loadBatch(true).then(() => {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollNew, POLL_MS);
+    });
   };
 
-  // Cerrar modal
   window.closeLogsModal = function(){
     try { if (currentController) { currentController.abort(); currentController = null; } } catch(e){}
     const form = getEl(formId); if (form) form.reset();
     const container = getEl(containerId);
     if (container) {
-      container.innerHTML = '<div class="p-4 text-sm text-gray-600">Cerrado — abre el modal para ver los logs.</div>';
+      container.innerHTML = '<div style="padding:1rem;color:#374151;">Cerrado — abre el modal para ver los logs.</div>';
       container.scrollTop = 0;
     }
     if (typeof cerrarModal === 'function') cerrarModal(modalId);
     else {
       const el = getEl(modalId); if (!el) return; el.classList.add('hidden'); el.classList.remove('flex');
     }
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
   };
 
-  // Listener de scroll para carga incremental
-  const container = getEl(containerId);
-  if (container) {
-    container.addEventListener('scroll', function() {
+  // ---------- Scroll infinito ----------
+  const containerEl = getEl(containerId);
+  if (containerEl) {
+    containerEl.addEventListener('scroll', function() {
       if (loading || !more) return;
-      const threshold = 300; // px antes de fondo para disparar carga
-      if (container.scrollTop + container.clientHeight + threshold >= container.scrollHeight) {
+      const threshold = 300;
+      if (containerEl.scrollTop + containerEl.clientHeight + threshold >= containerEl.scrollHeight) {
         loadBatch(false);
       }
     }, { passive: true });
   }
 
-  // Filtros: al cambiar cualquier filtro reiniciar carga
+  // ---------- Filtros: en tiempo real (debounced) ----------
   const formEl = getEl(formId);
   if (formEl) {
-    // submit -> recargar
     formEl.addEventListener('submit', function(e){ e.preventDefault(); offset = 0; more = true; loadBatch(true); });
-    // inputs/changes -> recargar (debounced para inputs de texto)
     formEl.querySelectorAll('input, select').forEach(inp => {
       inp.addEventListener('change', function(){ offset = 0; more = true; loadBatch(true); });
     });
@@ -1237,6 +1400,9 @@ if (typeof cargarCiudadesUsuario === 'undefined') {
 
   // Exponer carga manual si se necesita
   window.loadLogs = function() { offset = 0; more = true; loadBatch(true); };
+
+  // limpiar intervalos al salir de la página (por seguridad)
+  window.addEventListener('beforeunload', function(){ if (pollInterval) clearInterval(pollInterval); });
 
 })();
 </script>
@@ -1511,5 +1677,154 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+})();
+</script>
+
+<script>
+/*
+  Protege modales para que NO se cierren al hacer click fuera ni con Escape.
+  Pégalo directamente en includes/sidebar.php (antes de </body>).
+  - Solo permite cerrar el modal mediante botones internos (ej. Cancelar) que llamen a las funciones de cierre existentes.
+  - No resetea formularios; evita que handlers inline o globales ejecuten el cierre/limpieza por backdrop.
+*/
+(function(){
+  try {
+    const modalIds = ['registroModal', 'modalCrearUsuario', 'modalCrearDelegado'];
+    const extraSelector = '[role="dialog"], .modal'; // detecta modales generales
+    const protectedModals = new Set();
+
+    function isVisible(modal) {
+      if (!modal) return false;
+      // consider visible if in DOM and not hidden by 'hidden' class or display:none
+      if (modal.classList && modal.classList.contains('hidden')) return false;
+      const style = window.getComputedStyle(modal);
+      return style && style.display !== 'none' && style.visibility !== 'hidden' && document.body.contains(modal);
+    }
+
+    function getContentElement(modal) {
+      if (!modal) return null;
+      // Prefer explicit content selectors
+      const selectors = ['[role="document"]', '[role="dialog"] *[role="document"]', '.modal-content', '.modal-body', '.modal-inner', '.modal-card', '[data-modal-content]'];
+      for (const sel of selectors) {
+        const el = modal.querySelector(sel);
+        if (el) return el;
+      }
+      // Fallback: first element child that is not an overlay
+      const children = Array.from(modal.children).filter(c => c.nodeType === 1);
+      if (children.length === 1) return children[0];
+      // If many, try to pick the deepest with many descendants
+      let best = null, bestCount = -1;
+      children.forEach(c => {
+        const cnt = c.getElementsByTagName('*').length;
+        if (cnt > bestCount) { bestCount = cnt; best = c; }
+      });
+      return best || modal;
+    }
+
+    function gatherModals() {
+      const list = [];
+      modalIds.forEach(id => {
+        const m = document.getElementById(id);
+        if (m) list.push(m);
+      });
+      // also include generic modal selectors
+      document.querySelectorAll(extraSelector).forEach(m => {
+        if (m && m.id && modalIds.indexOf(m.id) === -1) { /* if has id not already included, add */ }
+        list.push(m);
+      });
+      // Deduplicate
+      return Array.from(new Set(list));
+    }
+
+    function protect(modal) {
+      if (!modal || protectedModals.has(modal)) return;
+      protectedModals.add(modal);
+      const content = getContentElement(modal) || modal;
+
+      // Capture phase listener on document to intercept clicks BEFORE inline handlers/bubbling
+      function onDocClickCapture(e) {
+        try {
+          if (!isVisible(modal)) return;
+          // If click inside modal content, allow it
+          if (content.contains(e.target)) return;
+          // Click outside content while modal visible: prevent further handling (so modal won't close/reset)
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          // Don't modify modal visibility; keep it open
+        } catch (err) {
+          console.error('modal-protect click error:', err);
+        }
+      }
+
+      // Capture Escape keypresss
+      function onDocKeydownCapture(e) {
+        try {
+          if (!isVisible(modal)) return;
+          if (e.key === 'Escape' || e.key === 'Esc') {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+          }
+        } catch (err) {
+          console.error('modal-protect keydown error:', err);
+        }
+      }
+
+      document.addEventListener('click', onDocClickCapture, true);
+      document.addEventListener('keydown', onDocKeydownCapture, true);
+
+      // Also neutralize inline onclick on the modal element itself if it closes/reset
+      try {
+        if (modal.hasAttribute && modal.hasAttribute('onclick')) {
+          // preserve original as data attribute just in case, then remove to avoid accidental resets
+          const orig = modal.getAttribute('onclick');
+          modal.setAttribute('data-onclick-removed', orig);
+          modal.removeAttribute('onclick');
+        }
+      } catch (err) { /* ignore */ }
+
+      // Observe modal for removal/disconnect to cleanup listeners if needed (lightweight)
+      const mo = new MutationObserver(() => {
+        if (!document.body.contains(modal)) {
+          try { document.removeEventListener('click', onDocClickCapture, true); } catch(e){}
+          try { document.removeEventListener('keydown', onDocKeydownCapture, true); } catch(e){}
+          protectedModals.delete(modal);
+          mo.disconnect();
+        }
+      });
+      mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+    }
+
+    // Initial protect for existing modals
+    const initial = gatherModals();
+    initial.forEach(m => protect(m));
+
+    // Watch for future modals added to DOM
+    const observer = new MutationObserver((mutations) => {
+      try {
+        const nodes = [];
+        mutations.forEach(mu => {
+          mu.addedNodes && mu.addedNodes.forEach(n => { if (n.nodeType === 1) nodes.push(n); });
+        });
+        if (nodes.length === 0) return;
+        nodes.forEach(n => {
+          // if node itself matches modal selectors
+          if (modalIds.includes(n.id) || n.matches && n.matches(extraSelector)) protect(n);
+          // or contains modals inside
+          modalIds.forEach(id => {
+            const el = n.querySelector && n.querySelector('#' + id);
+            if (el) protect(el);
+          });
+          const found = n.querySelectorAll && n.querySelectorAll(extraSelector);
+          if (found && found.length) {
+            found.forEach(f => protect(f));
+          }
+        });
+      } catch (err) { /* ignore */ }
+    });
+    observer.observe(document.documentElement || document.body, { childList: true, subtree: true });
+
+  } catch (e) {
+    console.error('modal-protect init error', e);
+  }
 })();
 </script>
